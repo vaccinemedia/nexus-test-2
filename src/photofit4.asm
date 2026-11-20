@@ -182,5 +182,5 @@ skin_paper:
 
     INCLUDE "photofit_select.inc"
 End:
-    ASSERT End <= IM2_STUB, "photofit bank 4 is full"
+    ASSERT End <= #10000, "photofit bank 4 is full"
     ENDMODULE

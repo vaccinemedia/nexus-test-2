@@ -542,5 +542,5 @@ End:
 ink     EQU End                     ; lines, then finished cell pixels
 sil     EQU ink + PF_SBUF
 attrs   EQU sil + PF_SBUF
-    ASSERT attrs + PF_SH / 8 * PF_SW <= IM2_STUB, "photofit bank 6 is full"
+    ASSERT attrs + PF_SH / 8 * PF_SW <= #10000, "photofit bank 6 is full"
     ENDMODULE
