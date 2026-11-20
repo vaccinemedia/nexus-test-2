@@ -6,7 +6,7 @@ SRC := src/nexus.asm
 LOADER_GEN := tools/gen_loader.py
 LOADER_INC := src/loader_basic.inc
 
-.PHONY: all clean run
+.PHONY: all clean run photofit photofit-preview
 
 # The AKM player/song are only regenerable with RASM. Without .PRECIOUS, a
 # failed RASM step makes make delete the checked-in binaries, which breaks
@@ -35,6 +35,14 @@ src/akm_player.bin src/title_music_relocated.akm: src/title_music.akm src/title_
 	SONG_ORG=$$(python3 -c "print(format(0x$$PLAYER_ORG + $$PLAYER_SIZE, 'X'))"); \
 	echo "Song ORG: 0x$$SONG_ORG (player + $$PLAYER_SIZE bytes)"; \
 	python3 tools/relocate_akm.py src/title_music.akm src/title_music_relocated.akm $$SONG_ORG
+
+# Photofit face art (needs Pillow). The generated src/photofit_*.inc files
+# are checked in, so the game builds without running these.
+photofit:
+	python3 tools/photofit/build_data.py
+
+photofit-preview:
+	python3 tools/photofit/preview.py ../photofit-previews
 
 clean:
 	rm -f $(OUTDIR)/nexus.tap $(OUTDIR)/nexus.sna src/akm_player.bin src/title_music_relocated.akm

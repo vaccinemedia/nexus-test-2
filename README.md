@@ -38,7 +38,7 @@ make run    # macOS: tries to open out/nexus.sna in FuseX
 ## How to play
 
 1. **Title** — Full-screen bitmap title; **Arkos Tracker 3** music on the AY. Subtitle and **PRESS ANY KEY**. After a timeout, the **high score** attract screen appears; any key starts a **new game** (score resets; **high score table stays in RAM** until you use a fresh snapshot or clear memory).
-2. **Level intro** — Subject number and name; key skips the short delay.
+2. **Level intro** — The subject's file: a large line-drawn photofit face beside their number, name, worth and per-question cost; a key skips the delay.
 3. **Interrogation** — Move on the **QAOP** grid; **SPACE** selects an icon (up to **three** probes per question). **ENTER** asks. **0** clears the query. Icons map to topics (memory, fear, pain, animal, child, etc.).
 4. **Readout** — A **scenario** line and a **subject response** appear in the text panel. Text is built from **templates + token pools** (noun/detail) so the answer refers to the same thing as the prompt, with variety and compact data.
 5. **Gauges** — **PUPIL** and **FLUSH** bars, **PATTERN** and **Q-WEIGHT** labels reflect the probe and subject model.
@@ -69,7 +69,9 @@ make run    # macOS: tries to open out/nexus.sna in FuseX
 | AY, beeper, AKM blob + song | [`src/ay_music.asm`](src/ay_music.asm) |
 | RASM wrapper for player | [`src/akm_build.asm`](src/akm_build.asm) |
 | AKM relocation | [`tools/relocate_akm.py`](tools/relocate_akm.py) |
-| Portrait drawing | [`src/portrait.asm`](src/portrait.asm) |
+| Photofit faces: paging glue, tape loading | [`src/photofit.asm`](src/photofit.asm) |
+| Photofit banks 6 / 4 / 3 | [`src/photofit6.asm`](src/photofit6.asm), [`src/photofit4.asm`](src/photofit4.asm), [`src/photofit3.asm`](src/photofit3.asm) |
+| Photofit art and previews | [`tools/photofit/`](tools/photofit/) |
 | Query class, gauges, **tokens**, templates | [`src/question.asm`](src/question.asm) |
 | Subjects, penalties | [`src/subjects.asm`](src/subjects.asm) |
 | Strings, token data | [`src/data_text.asm`](src/data_text.asm) |
@@ -77,6 +79,21 @@ make run    # macOS: tries to open out/nexus.sna in FuseX
 | States: intro, interrogation, verdict, game over | [`src/game.asm`](src/game.asm) |
 | High scores | [`src/hiscore.asm`](src/hiscore.asm) |
 | Constants, layout | [`src/const.inc`](src/const.inc) |
+
+## Photofit faces
+
+Every subject gets a face assembled from interchangeable features (6 heads, 12 hairstyles, 8 each of eyes, brows, noses, mouths and marks, 7 facial-hair styles, 3 collars), picked from the subject's portrait seed with separate male and female feature lists keyed to the subject's name. The mirror level always shows the same face.
+
+- **Interrogation** — 64×96 in the portrait area. Cells inside the face are black lines on skin- or hair-coloured paper; cells on its edge use coloured ink on black, which rounds the outline. Both eyes share four cells of one row, so stress still turns them red with a single attribute write.
+- **Level intro** — the same face at 96×144, black lines on the subject's skin colour.
+
+The art is drawn in code in [`tools/photofit/features.py`](tools/photofit/features.py), on the small face's grid, and rasterised at both sizes. After changing it:
+
+1. `make photofit-preview` writes Spectrum-accurate sheets to `../photofit-previews` (outside the repo).
+2. `make photofit` regenerates `src/photofit_*.inc` (needs Pillow).
+3. Rebuild as usual.
+
+The face data lives in RAM banks 6, 4 and 3, loaded by `pf_load_banks` from three headerless tape blocks after the main program.
 
 ## Replacing title music
 

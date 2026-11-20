@@ -239,5 +239,41 @@ BANK_0_48ROM    EQU #10
 BANK_1_48ROM    EQU #11
 BANK_3_48ROM    EQU #13
 BANK_4_48ROM    EQU #14
+BANK_6_48ROM    EQU #16
+
+; Photofit faces (photofit*.asm, art from tools/photofit)
+PF_BANK_SMALL   EQU BANK_6_48ROM    ; interrogation face
+PF_BANK_A       EQU BANK_4_48ROM    ; selection + dossier head .. mouth, glasses
+PF_BANK_B       EQU BANK_3_48ROM    ; dossier facial hair and hair
+; Slots in pf_sel, in the order tools/photofit/pfselect.py CAT_ORDER uses
+PF_HEAD         EQU 0
+PF_COLLAR       EQU 1
+PF_MARKS        EQU 2
+PF_EYES         EQU 3
+PF_BROWS        EQU 4
+PF_NOSE         EQU 5
+PF_MOUTH        EQU 6
+PF_FACIAL       EQU 7
+PF_HAIR         EQU 8
+PF_SEL_LEN      EQU 9
+; Interrogation face: fills the portrait area, 8 bytes x 96 lines
+PF_SW           EQU PORTRAIT_W
+PF_SH           EQU PORTRAIT_H * 8
+PF_SBUF         EQU PF_SW * PF_SH
+PF_PORTRAIT_SCR EQU PIX_BASE + ((PORTRAIT_ROW & #18) << 8) + ((PORTRAIT_ROW & 7) << 5) + PORTRAIT_COL
+PF_EYE_ROW      EQU PORTRAIT_ROW + 5   ; both eyes, two cells each
+PF_EYE_COL      EQU PORTRAIT_COL + 2
+PF_MOUTH_ROW    EQU 8                  ; portrait cell row/col of the red mouth
+PF_MOUTH_COL    EQU 3
+; Dossier face: 12 bytes x 144 lines, black lines on the subject's skin colour
+PF_LW           EQU 12
+PF_LH           EQU 144
+PF_PANEL_COL    EQU 1
+PF_PANEL_ROW    EQU 3
+LI_TEXT_COL     EQU 14                 ; level intro text, right of the dossier face
+PF_PANEL_SCR    EQU PIX_BASE + ((PF_PANEL_ROW & #18) << 8) + ((PF_PANEL_ROW & 7) << 5) + PF_PANEL_COL
+
+ROM_LD_BYTES    EQU #0556
+ROM_SYSVARS     EQU #5C3A           ; IY value the ROM interrupt handler expects
 
     ENDIF

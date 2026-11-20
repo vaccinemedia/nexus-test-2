@@ -31,10 +31,38 @@ level_intro_frame:
     ld a, INK_CYAN + (INK_BLACK*8) + BRIGHT
     call clear_screen_attrs
 
-    ; "SUBJECT N OF 25"
-    ld a, 8
+    ; The subject's file photo. The mirror level always shows the same man.
+    ld a, (is_mirror_level)
+    or a
+    ld a, #FF
+    jr nz, .li_face
+    ld a, (level_num)
+    dec a
+    ld e, a
+    ld d, 0
+    ld hl, name_order
+    add hl, de
+    ld a, (hl)
+.li_face:
+    call pf_select
+    call pf_dossier
+
+    ld a, 3
     ld (pr_col), a
-    ld a, 8
+    ld a, 1
+    ld (pr_row), a
+    ld hl, str_vk_file
+    call print_str
+    ld d, 1
+    ld b, 3
+    ld e, 26
+    ld a, INK_WHITE + (INK_BLACK*8) + BRIGHT
+    call set_row_attrs
+
+    ; "SUBJECT N OF 25"
+    ld a, LI_TEXT_COL
+    ld (pr_col), a
+    ld a, 5
     ld (pr_row), a
     ld hl, str_subject
     call print_str
@@ -59,9 +87,9 @@ level_intro_frame:
     inc hl
     ld h, (hl)
     ld l, a             ; HL = name string pointer
-    ld a, 10
+    ld a, LI_TEXT_COL
     ld (pr_col), a
-    ld a, 11
+    ld a, 8
     ld (pr_row), a
     call print_str
 
@@ -70,26 +98,22 @@ level_intro_frame:
     ld a, (is_mirror_level)
     or a
     jr nz, .li_no_value
-    ld a, 8
-    ld (pr_col), a
-    ld a, 14
-    ld (pr_row), a
+    ld a, 12
     ld hl, str_worth
-    call print_str
+    call li_text_at
     ld a, (subj_worth)
     call li_spaced_num
+    ld a, 13
     ld hl, str_awarded
-    call print_str
-    ld a, 6
-    ld (pr_col), a
-    ld a, 16
-    ld (pr_row), a
+    call li_text_at
+    ld a, 15
     ld hl, str_cost
-    call print_str
+    call li_text_at
     ld a, (subj_penalty)
     call li_spaced_num
+    ld a, 16
     ld hl, str_per_q
-    call print_str
+    call li_text_at
 .li_no_value:
 
     ld hl, INTRO_DELAY
@@ -155,6 +179,13 @@ level_intro_frame:
     ld a, ST_INTERROGATION
     ld (game_state), a
     ret
+
+; Prints string HL at row A of the dossier's text column.
+li_text_at:
+    ld (pr_row), a
+    ld a, LI_TEXT_COL
+    ld (pr_col), a
+    jp print_str
 
 ; Prints A as a number with a space either side, at the print cursor.
 li_spaced_num:
@@ -655,65 +686,18 @@ draw_qweight_label:
 trigger_eye_blink:
     ld a, 10
     ld (blink_timer), a
-    ; Determine eye positions from portrait seed
-    ld hl, (current_subj)
-    ld de, SUBJ_PORTRAIT + 1
-    add hl, de
-    ld a, (hl)          ; port_seed_hi
-    and 1
-    jr z, .teb_normal
-    ; Wide eyes: cols 1 and 6
-    ld a, ATTR_PUPIL_BLINK
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 1
-    ld e, 1
-    call set_row_attrs
-    ld a, ATTR_PUPIL_BLINK
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 6
-    ld e, 1
-    jp set_row_attrs
-.teb_normal:
-    ; Normal eyes: cols 2 and 5
-    ld a, ATTR_PUPIL_BLINK
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 2
-    ld e, 1
-    call set_row_attrs
-    ld a, ATTR_PUPIL_BLINK
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 5
-    ld e, 1
-    jp set_row_attrs
+    ld a, (pf_eye_attr)
+    or INK_RED
+    jr set_eye_attr
 
 ; Restore eye attrs to normal black
 restore_eye_attr:
-    ld hl, (current_subj)
-    ld de, SUBJ_PORTRAIT + 1
-    add hl, de
-    ld a, (hl)
-    and 1
-    jr z, .rea_normal
-    ld a, (eye_attr)
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 1
-    ld e, 1
-    call set_row_attrs
-    ld a, (eye_attr)
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 6
-    ld e, 1
-    jp set_row_attrs
-.rea_normal:
-    ld a, (eye_attr)
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 2
-    ld e, 1
-    call set_row_attrs
-    ld a, (eye_attr)
-    ld d, PORTRAIT_ROW + 3
-    ld b, PORTRAIT_COL + 5
-    ld e, 1
+    ld a, (pf_eye_attr)
+; Both eyes span four cells of one row of the photofit face
+set_eye_attr:
+    ld d, PF_EYE_ROW
+    ld b, PF_EYE_COL
+    ld e, 4
     jp set_row_attrs
 
 ; ===============================================================

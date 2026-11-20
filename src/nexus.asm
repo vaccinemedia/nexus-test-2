@@ -16,6 +16,11 @@ Entry:
     ld sp, #7ff0
     call ay_mute
     call verify_paging
+    call pf_load_banks
+    ; A valid face before any subject has been picked: glitch effects can
+    ; repaint the portrait at any time.
+    xor a
+    call pf_select
     call video_home_128
     call init_custom_font
     call title_init
@@ -73,7 +78,7 @@ ml_noop:
     ; they don't push the pre-#93F8 code past the fixed player address.
     INCLUDE "glitch_effects.asm"
     INCLUDE "ay_outro.asm"
-    INCLUDE "portrait.asm"
+    INCLUDE "photofit.asm"
     INCLUDE "question.asm"
     INCLUDE "subjects.asm"
     INCLUDE "data_text.asm"
@@ -156,7 +161,15 @@ intro_hold        EQU intro_phase + 1              ; DW; frames until intro auto
 name_order        EQU intro_hold + 2               ; 32 bytes; shuffled subject-name indices
 subj_worth        EQU name_order + SUBJ_NAME_COUNT ; points for an instant correct verdict
 subj_penalty      EQU subj_worth + 1               ; points lost per question asked
-LowRamVarsEnd     EQU subj_penalty + 1
+; Photofit face of the current subject, chosen by pf_select. Read by the
+; photofit banks, so these must stay in always-mapped RAM.
+pf_sel            EQU subj_penalty + 1             ; PF_SEL_LEN feature indices
+pf_skin           EQU pf_sel + PF_SEL_LEN          ; must follow pf_sel (Deckard copy)
+pf_hairc          EQU pf_skin + 1
+pf_rng            EQU pf_hairc + 1                 ; DW
+pf_built          EQU pf_rng + 2                   ; 0 = interrogation face needs building
+pf_eye_attr       EQU pf_built + 1                 ; eye cells' resting attribute
+LowRamVarsEnd     EQU pf_eye_attr + 1
     ; The printer buffer is only 256 bytes; #5C00 upwards is the system
     ; variable area and clobbering it will hang the machine.
     ASSERT LowRamVarsEnd <= #5C00, "Low-RAM variables overran the printer buffer"
@@ -703,6 +716,7 @@ penalty_table:
 str_worth:  DB "WORTH",0
 str_cost:   DB "COST",0
 str_per_q:  DB "PER QUESTION",0
+str_vk_file: DB "VOIGHT-KAMPFF SUBJECT FILE",0
 
 GlitchStringsEnd:
 GlitchStringsLen EQU GlitchStringsEnd - GlitchStringsStart
@@ -735,5 +749,23 @@ LoaderBasicLen EQU LoaderBasicEnd - LoaderBasic
     PAGE 5
     SAVETAP "nexus.tap", CODE, "samples", SamplesStart, SamplesLen, #6000
     SAVETAP "nexus.tap", CODE, "strings", GlitchStringsStart, GlitchStringsLen, #6900
+
+; -----------------------------------------------------------------
+; Photofit banks, loaded at start-up by pf_load_banks as headerless
+; blocks in this order.
+; -----------------------------------------------------------------
+    SLOT 3
+    PAGE 6
+    INCLUDE "photofit6.asm"
+    SAVETAP "nexus.tap", HEADLESS, #C000, pf6.End - #C000, #FF
+    DISPLAY "Photofit bank 6: ", /D, pf6.End - #C000, " bytes + buffers (free ", /D, #10000 - (pf6.attrs + PF_SH / 8 * PF_SW), ")"
+    PAGE 4
+    INCLUDE "photofit4.asm"
+    SAVETAP "nexus.tap", HEADLESS, #C000, pf4.End - #C000, #FF
+    DISPLAY "Photofit bank 4: ", /D, pf4.End - #C000, " bytes (free ", /D, #10000 - pf4.End, ")"
+    PAGE 3
+    INCLUDE "photofit3.asm"
+    SAVETAP "nexus.tap", HEADLESS, #C000, pf3.End - #C000, #FF
+    DISPLAY "Photofit bank 3: ", /D, pf3.End - #C000, " bytes (free ", /D, #10000 - pf3.End, ")"
     PAGE 0
     END Entry

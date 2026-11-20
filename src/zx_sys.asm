@@ -9,14 +9,10 @@ video_home_128:
     out (c), a
     ret
 
-; --- Paging proof: #C000 bank 3 vs bank 4 ---
-; Banks 3 and 4 are unused by the loader, so probing them doesn't
-; corrupt game code (bank 0) or sample data (bank 1). Keeps bit 4
-; (48K ROM) set throughout so BASIC-adjacent state stays sane.
-; Probes 128K bank paging using banks 4 and 6, which the loader
-; leaves empty (bank 3 now holds glitch strings, bank 1 holds
-; samples, so we can't safely scribble on those). Bit 4 keeps the
-; 48K ROM mapped; bit 5 is always clear so paging stays enabled.
+; --- Paging proof: #C000 bank 4 vs bank 6 ---
+; Runs before pf_load_banks fills banks 4 and 6 with photofit art, so
+; the test bytes are overwritten rather than corrupting it. Bit 4 keeps
+; the 48K ROM mapped; bit 5 is always clear so paging stays enabled.
 verify_paging:
     ld bc, #7ffd
     ld a, #14                ; bank 4, 48K ROM
