@@ -17,6 +17,7 @@ Entry:
     call ay_mute
     call verify_paging
     call pf_load_banks
+    call music_isr_setup
     ; A valid face before any subject has been picked: glitch effects can
     ; repaint the portrait at any time.
     xor a
@@ -204,7 +205,9 @@ hiscore_initials: DB "AAA"
 hiscore_cursor:  DB 0
 
 GameCodeEnd:
-    DISPLAY "Main image: ", /D, GameCodeEnd - Entry, " bytes  (headroom to #FFF7: ", /D, #FFF7 - GameCodeEnd, ")"
+    DISPLAY "Main image: ", /D, GameCodeEnd - Entry, " bytes  (headroom to IM2_STUB: ", /D, IM2_STUB - GameCodeEnd, ")"
+    ASSERT GameCodeEnd <= IM2_STUB, "Main image overlaps the IM 2 stub at #FFF4"
+    ASSERT music_isr_stub < #C000, "Music interrupt code must not be paged out"
 
 ; -----------------------------------------------------------------
 ; Sample data lives in bank 5 (#4000-#7FFF) which is always mapped
@@ -758,14 +761,14 @@ LoaderBasicLen EQU LoaderBasicEnd - LoaderBasic
     PAGE 6
     INCLUDE "photofit6.asm"
     SAVETAP "nexus.tap", HEADLESS, #C000, pf6.End - #C000, #FF
-    DISPLAY "Photofit bank 6: ", /D, pf6.End - #C000, " bytes + buffers (free ", /D, #10000 - (pf6.attrs + PF_SH / 8 * PF_SW), ")"
+    DISPLAY "Photofit bank 6: ", /D, pf6.End - #C000, " bytes + buffers (free ", /D, IM2_STUB - (pf6.attrs + PF_SH / 8 * PF_SW), ")"
     PAGE 4
     INCLUDE "photofit4.asm"
     SAVETAP "nexus.tap", HEADLESS, #C000, pf4.End - #C000, #FF
-    DISPLAY "Photofit bank 4: ", /D, pf4.End - #C000, " bytes (free ", /D, #10000 - pf4.End, ")"
+    DISPLAY "Photofit bank 4: ", /D, pf4.End - #C000, " bytes (free ", /D, IM2_STUB - pf4.End, ")"
     PAGE 3
     INCLUDE "photofit3.asm"
     SAVETAP "nexus.tap", HEADLESS, #C000, pf3.End - #C000, #FF
-    DISPLAY "Photofit bank 3: ", /D, pf3.End - #C000, " bytes (free ", /D, #10000 - pf3.End, ")"
+    DISPLAY "Photofit bank 3: ", /D, pf3.End - #C000, " bytes (free ", /D, IM2_STUB - pf3.End, ")"
     PAGE 0
     END Entry

@@ -15,4 +15,5 @@ hair:
     INCLUDE "pf_dossier_draw.inc"
     INCLUDE "photofit_large_b.inc"
 End:
+    ASSERT End <= IM2_STUB, "photofit bank 3 is full"
     ENDMODULE

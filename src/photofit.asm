@@ -63,6 +63,7 @@ pf_load_banks:
     scf
     call ROM_LD_BYTES
     di
+    call music_isr_stub
     pop hl
     jr .block
 

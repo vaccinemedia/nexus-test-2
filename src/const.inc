@@ -241,6 +241,11 @@ BANK_3_48ROM    EQU #13
 BANK_4_48ROM    EQU #14
 BANK_6_48ROM    EQU #16
 
+; IM 2 music interrupt (see music_isr). Every bank that can be paged in
+; at #C000 while interrupts are on needs the stub at #FFF4 and #FFFF.
+IM2_I           EQU #39             ; 48K ROM page full of #FF
+IM2_STUB        EQU #FFF4           ; JP music_isr; #FFFF holds JR to here
+
 ; Photofit faces (photofit*.asm, art from tools/photofit)
 PF_BANK_SMALL   EQU BANK_6_48ROM    ; interrogation face
 PF_BANK_A       EQU BANK_4_48ROM    ; selection + dossier head .. mouth, glasses
